@@ -40,9 +40,9 @@ android {
 }
 
 repositories {
-    maven { url "https://repo.commonsware.com.s3.amazonaws.com" }
-    maven { url "https://jitpack.io" }
-    mavenCentral()
+    google()
+    mavenCentral() // Maven Central pour les dépendances communes
+    maven { url "https://jitpack.io" } // JitPack pour les dépendances GitHub
 }
 
 configurations {
