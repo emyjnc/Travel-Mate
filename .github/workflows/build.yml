@@ -14,15 +14,23 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      
+
       # Étape 2 : Configurer le JDK 17
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: 17
           distribution: 'zulu' # Utiliser Zulu JDK
-      
-      # Étape 3 : Cache pour SonarQube
+
+      # Étape 3 : Télécharger et installer SonarQube Scanner
+      - name: Install SonarQube Scanner
+        run: |
+          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.7.0.2747-linux.zip
+          unzip sonar-scanner-cli-4.7.0.2747-linux.zip
+          mv sonar-scanner-4.7.0.2747-linux sonar-scanner
+          echo "$(pwd)/sonar-scanner/bin" >> $GITHUB_PATH
+
+      # Étape 4 : Cache pour SonarQube
       - name: Cache SonarQube packages
         uses: actions/cache@v4
         with:
@@ -30,7 +38,7 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      # Étape 4 : Lancer l'analyse Sonar sans compilation
+      # Étape 5 : Lancer l'analyse Sonar
       - name: Run SonarQube analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -42,4 +50,4 @@ jobs:
             -Dsonar.sources=app/src/main/java \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-            -Dsonar.java.binaries= # Pas de compilation
+            -Dsonar.java.binaries=
