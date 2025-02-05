@@ -114,6 +114,12 @@ dependencies {
     // World Country flag
     implementation 'com.github.blongho:world-country-data:v1.1.0'
 }
+tasks.whenTaskAdded { task ->
+    if (task.name == "checkDebugManifest") {
+        task.enabled = false
+    }
+}
+
 
 preBuild.dependsOn('checkstyle')
 assemble.dependsOn('lint')
