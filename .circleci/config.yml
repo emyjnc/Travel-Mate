@@ -1,43 +1,75 @@
-# This config was automatically generated from your source code
-# Stacks detected: cicd:github-actions:.github/workflows,deps:java:Android,tool:gradle:
 version: 2.1
 jobs:
   test-java:
     docker:
-      - image: cimg/openjdk:17.0
+      - image: circleci/android:api-30  # Utilise une image Docker Android adaptée
     working_directory: ~/project/Android
+    environment:
+      ANDROID_HOME: /opt/android/sdk
+      PATH: /opt/android/sdk/tools:/opt/android/sdk/platform-tools:$PATH
     steps:
+      # Étape 1 : Cloner le dépôt
       - checkout:
           path: ~/project
+
+      # Étape 2 : Calculer la clé de cache
       - run:
           name: Calculate cache key
           command: |-
             find . -name 'pom.xml' -o -name 'gradlew*' -o -name '*.gradle*' | \
                     sort | xargs cat > /tmp/CIRCLECI_CACHE_KEY
+
+      # Étape 3 : Restaurer le cache Gradle
       - restore_cache:
           key: cache-{{ checksum "/tmp/CIRCLECI_CACHE_KEY" }}
+
+      # Étape 4 : Configurer le fichier local.properties
       - run:
+          name: Configurer local.properties
+          command: echo "sdk.dir=/opt/android/sdk" > local.properties
+
+      # Étape 5 : Accepter les licences Android
+      - run:
+          name: Accepter les licences du SDK
+          command: yes | sdkmanager --licenses
+
+      # Étape 6 : Vérifier les dépendances Gradle
+      - run:
+          name: Vérifier les dépendances Gradle
+          command: ./gradlew dependencies
+
+      # Étape 7 : Lancer les tests
+      - run:
+          name: Lancer les tests
           command: ./gradlew check
+
+      # Étape 8 : Sauvegarder les résultats des tests
       - store_test_results:
           path: build/test-results
+
+      # Étape 9 : Sauvegarder le cache Gradle
       - save_cache:
           key: cache-{{ checksum "/tmp/CIRCLECI_CACHE_KEY" }}
           paths:
             - ~/.gradle/caches
+            - ~/.gradle/wrapper
+
+      # Étape 10 : Stocker les rapports
       - store_artifacts:
           path: build/reports
+
   deploy:
-    # This is an example deploy job, not actually used by the workflow
+    # Exemple de job de déploiement (facultatif)
     docker:
       - image: cimg/base:stable
     steps:
-      # Replace this with steps to deploy to users
       - run:
-          name: deploy
-          command: '#e.g. ./deploy.sh'
+          name: Déployer
+          command: '# Exemple : ./deploy.sh'
       - run:
-          name: found github actions config
+          name: Found GitHub Actions config
           command: ':'
+
 workflows:
   build-and-test:
     jobs:
